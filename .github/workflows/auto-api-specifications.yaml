@@ -93,6 +93,10 @@ jobs:
     needs: find-todo-api-specs
     if: needs.find-todo-api-specs.outputs.has-todos == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     strategy:
       matrix:
         use-case: ${{ fromJson(needs.find-todo-api-specs.outputs.todo-list) }}
@@ -108,6 +112,22 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Ensure directories and files exist
+        run: |
+          # Create necessary directories if they don't exist
+          mkdir -p src/backend/Api/openapi
+          mkdir -p docs/use-cases
+          mkdir -p docs
+          
+          # Ensure key files exist and are writable
+          touch src/backend/Api/openapi/postman-collection.json
+          touch docs/ARCHITECTURE.md
+          touch docs/BUSINESS_RULES.md
+          
+          # Set write permissions
+          chmod -R u+w src/backend/Api/openapi
+          chmod -R u+w docs
 
       - name: Create branch for API specification
         id: create-branch
