@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: RateYourSchool API
+  description: |
+    RESTful API for rating and reviewing schools. This API enables users to browse schools,
+    view ratings and reviews, and submit their own reviews anonymously.
+    
+    ## Architecture
+    - CQRS pattern with read/write model separation
+    - MongoDB for data persistence
+    - Eventual consistency between write and read models
+    
+    ## Authentication
+    - Most endpoints are anonymous (no authentication required)
+    - Future versions may include authentication for specific operations
+    
+  version: 1.0.0
+  contact:
+    name: RateYourSchool Team
+    url: https://github.com/OWNER/RateYourSchool
+  license:
+    name: See COPYING file
+    url: https://github.com/OWNER/RateYourSchool/blob/main/COPYING
+
+servers:
+  - url: https://api.rateyourschool.com/v1
+    description: Production server
+  - url: http://localhost:5001/v1
+    description: Development server
+
+tags:
+  - name: Schools
+    description: School information and ratings
+  - name: Reviews
+    description: User reviews for schools
+  - name: Health
+    description: API health and status
+
+paths:
+  # TODO: Add API endpoints here
+  # Each use case implementation should add its endpoints to this section
+  #
+  # Example structure:
+  # /schools:
+  #   get:
+  #     summary: Get list of schools
+  #     ...
+  #
+  # /schools/{schoolId}:
+  #   get:
+  #     summary: Get school details
+  #     ...
+  #
+  # /schools/{schoolId}/reviews:
+  #   post:
+  #     summary: Create a review
+  #     ...
+
+components:
+  schemas:
+    # TODO: Add shared data models here
+    # Each use case implementation should add its schemas to this section
+    #
+    # Common schemas to define:
+    # - School
+    # - SchoolRate
+    # - UserReview
+    # - Score
+    # - Location
+    # - Error responses
+    
+    Error:
+      type: object
+      description: Standard error response
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code or type
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+        details:
+          type: array
+          description: Detailed validation errors (optional)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "VALIDATION_ERROR"
+            message: "Invalid request parameters"
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NOT_FOUND"
+            message: "The requested resource was not found"
+    
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+  
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number for pagination (1-based)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+    
+    PageSize:
+      name: pageSize
+      in: query
+      description: Number of items per page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 20
+      example: 20

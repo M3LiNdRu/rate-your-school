@@ -11,18 +11,18 @@
 
 | Task | Status | Completed |
 |------|--------|-----------|
-| **Functional Requirements Document** | done | 2026-03-17 |
-| **API Specifications (OpenAPI + Arazzo)** | todo | - |
-| **Backend Implementation (Vertical Slice)** | todo | - |
-| **Frontend Implementation** | todo | - |
-| **E2E Tests** | todo | - |
-| **Penetration Tests** | todo | - |
+| **Functional Requirements Document** | DONE | 2026-03-17 |
+| **API Specifications (OpenAPI + Arazzo)** | TODO | - |
+| **Backend Implementation (Vertical Slice)** | TODO | - |
+| **Frontend Implementation** | TODO | - |
+| **E2E Tests** | TODO | - |
+| **Penetration Tests** | TODO | - |
 
 **Status Legend:**
-- `todo` - Not started
-- `in-progress` - Currently being worked on
-- `in-review` - Completed and under review
-- `done` - Completed and verified
+- `TODO` - Not started
+- `IN-PROGRESS` - Currently being worked on
+- `IN-REVIEW` - Completed and under review
+- `DONE` - Completed and verified
 
 ---
 

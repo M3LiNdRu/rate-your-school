@@ -60,18 +60,18 @@ Create a use case document when:
 
 | Task | Status | Completed |
 |------|--------|-----------|
-| **Functional Requirements Document** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
-| **API Specifications** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
-| **Backend Implementation** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
-| **Frontend Implementation** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
-| **E2E Tests** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
-| **Penetration Tests** | [todo/in-progress/in-review/done] | [YYYY-MM-DD or -] |
+| **Functional Requirements Document** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
+| **API Specifications** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
+| **Backend Implementation** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
+| **Frontend Implementation** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
+| **E2E Tests** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
+| **Penetration Tests** | [TODO/IN-PROGRESS/IN-REVIEW/DONE] | [YYYY-MM-DD or -] |
 
 **Status Legend:**
-- `todo` - Not started
-- `in-progress` - Currently being worked on
-- `in-review` - Completed and under review
-- `done` - Completed and verified
+- `TODO` - Not started
+- `IN-PROGRESS` - Currently being worked on
+- `IN-REVIEW` - Completed and under review
+- `DONE` - Completed and verified
 
 ---
 

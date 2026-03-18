@@ -11,18 +11,18 @@
 
 | Task | Status | Completed |
 |------|--------|-----------|
-| **Functional Requirements Document** | done | 2026-03-16 |
-| **API Specifications (OpenAPI + Arazzo)** | todo | - |
-| **Backend Implementation (Vertical Slice)** | todo | - |
-| **Frontend Implementation** | todo | - |
-| **E2E Tests** | todo | - |
-| **Penetration Tests** | todo | - |
+| **Functional Requirements Document** | DONE | 2026-03-16 |
+| **API Specifications (OpenAPI + Arazzo)** | TODO | - |
+| **Backend Implementation (Vertical Slice)** | TODO | - |
+| **Frontend Implementation** | TODO | - |
+| **E2E Tests** | TODO | - |
+| **Penetration Tests** | TODO | - |
 
 **Status Legend:**
-- `todo` - Not started
-- `in-progress` - Currently being worked on
-- `in-review` - Completed and under review
-- `done` - Completed and verified
+- `TODO` - Not started
+- `IN-PROGRESS` - Currently being worked on
+- `IN-REVIEW` - Completed and under review
+- `DONE` - Completed and verified
 
 ---
 
@@ -2399,7 +2399,7 @@ Recommended sequence:
 
 - Update the **Implementation Progress** table when tasks are completed
 - Document the completion date in YYYY-MM-DD format
-- Change status from `todo` → `in-progress` → `in-review` → `done`
+- Change status from `TODO` → `IN-PROGRESS` → `IN-REVIEW` → `DONE`
 - Keep acceptance criteria updated if requirements change
 
 ### Review Process
@@ -2408,7 +2408,7 @@ Recommended sequence:
 2. **Technical Review**: After API specifications are defined
 3. **Implementation Review**: After backend is implemented
 4. **Testing Review**: After tests are written and passing
-5. **Final Review**: Before marking as `done`
+5. **Final Review**: Before marking as `DONE`
 
 ### Update Triggers
 

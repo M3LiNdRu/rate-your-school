@@ -1,0 +1,55 @@
+# .gitattributes - Git attributes for proper file handling
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts should always use LF line endings
+*.sh text eol=lf
+
+# Windows batch files should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Configure diff for C# files
+*.cs diff=csharp
+
+# Configure diff for markdown
+*.md diff=markdown
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.dll binary
+*.exe binary
+*.zip binary
+*.tar binary
+*.gz binary
+
+# YAML files
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# JSON files
+*.json text eol=lf
+
+# Configuration files
+.editorconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Documentation
+README.md text eol=lf
+LICENSE text eol=lf
+COPYING text eol=lf
+CHANGELOG.md text eol=lf
+CONTRIBUTING.md text eol=lf
+
+# Linguist overrides for repository language statistics
+*.md linguist-documentation
+*.yaml linguist-language=YAML
+*.yml linguist-language=YAML
+docs/** linguist-documentation

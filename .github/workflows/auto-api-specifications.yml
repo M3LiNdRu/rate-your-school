@@ -1,0 +1,497 @@
+name: Auto-Generate API Specifications from Use Cases
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  find-todo-api-specs:
+    name: Find TODO API Specifications
+    runs-on: ubuntu-latest
+    outputs:
+      has-todos: ${{ steps.find-todos.outputs.has-todos }}
+      todo-list: ${{ steps.find-todos.outputs.todo-list }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find TODO API Specifications
+        id: find-todos
+        run: |
+          echo "Searching for TODO API specifications in use-case files..."
+          
+          # Initialize variables
+          TODO_FOUND=false
+          TODO_LIST=""
+          
+          # Search for use-case files in folders
+          if [ -d "docs/use-cases" ]; then
+            for dir in docs/use-cases/*/; do
+              if [ -d "$dir" ]; then
+                # Look for the main use case markdown file
+                file="${dir}use-case.md"
+                if [ ! -f "$file" ]; then
+                  # Fallback: look for any .md file in the folder
+                  file=$(find "$dir" -maxdepth 1 -name "*.md" -type f | head -n 1)
+                fi
+                
+                if [ -f "$file" ]; then
+                  # Check if file contains TODO API Specifications
+                  if grep -q "| \*\*API Specifications (OpenAPI + Arazzo)\*\* | TODO |" "$file" || \
+                     grep -q "| **API Specifications (OpenAPI + Arazzo)** | TODO |" "$file" || \
+                     grep -q "| \*\*API Specifications\*\* | TODO |" "$file" || \
+                     grep -q "| **API Specifications** | TODO |" "$file"; then
+                  
+                    echo "Found TODO API specification in: $file"
+                    
+                    # Extract use case name from directory name
+                    USE_CASE_NAME=$(basename "$(dirname "$file")")
+                    
+                    # Extract title from file
+                    TITLE=$(grep -m 1 "^# " "$file" | sed 's/^# //' || echo "$USE_CASE_NAME")
+                  
+                    TODO_FOUND=true
+                    
+                    # Add to list (JSON array format)
+                    if [ -z "$TODO_LIST" ]; then
+                      TODO_LIST="[{\"file\":\"$file\",\"name\":\"$USE_CASE_NAME\",\"title\":\"$TITLE\"}]"
+                    else
+                      TODO_LIST=$(echo "$TODO_LIST" | jq --arg file "$file" --arg name "$USE_CASE_NAME" --arg title "$TITLE" '. += [{"file":$file,"name":$name,"title":$title}]')
+                    fi
+                  fi
+                fi
+              fi
+            done
+          fi
+          
+          # Set outputs
+          if [ "$TODO_FOUND" = true ]; then
+            echo "has-todos=true" >> $GITHUB_OUTPUT
+            echo "todo-list=$TODO_LIST" >> $GITHUB_OUTPUT
+            echo "Found TODO items: $TODO_LIST"
+          else
+            echo "has-todos=false" >> $GITHUB_OUTPUT
+            echo "No TODO API specifications found"
+          fi
+
+  create-api-spec-prs:
+    name: Create API Specification PRs
+    needs: find-todo-api-specs
+    if: needs.find-todo-api-specs.outputs.has-todos == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        use-case: ${{ fromJson(needs.find-todo-api-specs.outputs.todo-list) }}
+      max-parallel: 1 # Process one at a time to avoid conflicts
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch for API specification
+        id: create-branch
+        run: |
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          BRANCH_NAME="icds/${USE_CASE_NAME}"
+          
+          echo "Creating branch: $BRANCH_NAME"
+          
+          # Check if branch already exists
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists. Checking out..."
+            git fetch origin "$BRANCH_NAME"
+            git checkout "$BRANCH_NAME"
+            git pull origin "$BRANCH_NAME"
+            echo "branch-exists=true" >> $GITHUB_OUTPUT
+          else
+            git checkout -b "$BRANCH_NAME"
+            echo "branch-exists=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create API specification task file
+        run: |
+          USE_CASE_FILE="${{ matrix.use-case.file }}"
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          USE_CASE_TITLE="${{ matrix.use-case.title }}"
+          
+          # Create a task file in the use case folder
+          TASK_FILE="docs/use-cases/${USE_CASE_NAME}/api-spec-task.md"
+          mkdir -p "$(dirname "$TASK_FILE")"
+          
+          cat > "$TASK_FILE" << 'EOF'
+          # API Specification Task: ${{ matrix.use-case.title }}
+          
+          ## Objective
+          
+          Create OpenAPI 3.x and Arazzo workflow specifications for the following use case:
+          
+          **Use Case Folder:** `docs/use-cases/${USE_CASE_NAME}/`  
+          **Use Case File:** `${{ matrix.use-case.file }}`
+          
+          ## Instructions for GitHub Copilot
+          
+          This task requires creating comprehensive API specifications based on the use case document.
+          Please help implement the following:
+          
+          ### 1. OpenAPI Specification
+          
+          Add your endpoints to the shared OpenAPI specification:
+          
+          - **Path Definition**: Add the API endpoint(s) to the `paths` section
+          - **Operation Details**: Include operationId, summary, description
+          - **Request Schema**: Define request body schema with all required/optional fields
+          - **Response Schemas**: Define success (200/201) and error responses (400, 404, 500)
+          - **Validation Rules**: Include data type validations, required fields, constraints
+          - **Examples**: Provide request and response examples
+          - **Components**: Add reusable schemas to the `components` section
+          - **Security**: Define security requirements if applicable
+          
+          **File Location:** `src/backend/Api/openapi/openapi.yaml` (shared file)
+          
+          ### 2. Arazzo Workflow Specification
+          
+          Add your workflow to the shared Arazzo specification:
+          
+          - **Workflow Definition**: Add a new workflow to the `workflows` section
+          - **Parameters**: Define workflow inputs and step parameters
+          - **Steps**: Reference operations from the OpenAPI spec
+          - **Success Criteria**: Define expected outcomes
+          - **Failure Handling**: Define error scenarios and responses
+          
+          ### 3. Postman Collection
+          
+          Add your request examples to the Postman collection:
+          
+          - **Request Examples**: Add requests to the appropriate folder (Schools, Reviews, etc.)
+          - **Variables**: Use collection variables ({{baseUrl}}) for URLs
+          - **Tests**: Add test scripts to validate responses
+          - **Examples**: Provide example requests with realistic data
+          - **Documentation**: Add descriptions for each request
+          
+          **File Location:** `src/backend/Api/openapi/postman-collection.json` (shared file)
+          
+          **Note:** The Postman collection can be generated from OpenAPI using tools like:
+          - `openapi-to-postman` CLI
+          - Postman's built-in OpenAPI import
+          - Manual addition following existing structure
+          
+          ### 3. Reference the Use Case
+          
+          - Read the complete use case document at: `${{ matrix.use-case.file }}`
+          - Follow the acceptance criteria defined in Gherkin scenarios
+          - Implement all business rules referenced in the use case
+          - Match the data models and validation rules specified
+          
+          ### 4. Follow Project Standards
+          
+          - Follow the project's OpenAPI conventions (see existing specs in `src/backend/Api/openapi/`)
+          - Use RESTful principles
+          - Include proper error handling (400, 404, 500)
+          - Add comprehensive examples
+          - Reference business rules in descriptions (e.g., BR-XXX)
+          
+          ## Checklist
+          
+          - [ ] Endpoints added to `openapi.yaml`
+          - [ ] Schemas added to `components/schemas` section
+          - [ ] Workflow added to `arazzo.yaml`
+          - [ ] Postman requests added to `postman-collection.json`
+          - [ ] All endpoints from use case are included
+          - [ ] Request/response schemas match requirements
+          - [ ] Validation rules are implemented
+          - [ ] Examples are provided
+          - [ ] Business rules are referenced
+          - [ ] OpenAPI and Arazzo files are valid YAML
+          - [ ] Postman collection is valid JSON
+          - [ ] Use case status updated to `DONE` for API Specifications
+          
+          ## Next Steps After Completion
+          
+          Once the API specifications are complete:
+          
+          1. Update the use case file to mark API Specifications as `DONE`
+          2. Commit changes with message: `feat(api-spec): add OpenAPI and Arazzo for ${USE_CASE_NAME}`
+          3. The PR will be ready for review
+          
+          ---
+          
+          **Note:** This task was automatically generated by the API Specification Automation workflow.
+          **Triggered by:** Push to main branch on $(date +%Y-%m-%d)
+          EOF
+          
+          git add "$TASK_FILE"
+
+      - name: Create or update shared API specification files
+        run: |
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          USE_CASE_TITLE="${{ matrix.use-case.title }}"
+          
+          # Create OpenAPI file if it doesn't exist
+          OPENAPI_FILE="src/backend/Api/openapi/openapi.yaml"
+          mkdir -p "$(dirname "$OPENAPI_FILE")"
+          
+          if [ ! -f "$OPENAPI_FILE" ]; then
+            cat > "$OPENAPI_FILE" << 'EOF'
+openapi: 3.0.3
+info:
+  title: RateYourSchool API
+  description: API for rating and reviewing schools
+  version: 1.0.0
+  contact:
+    name: RateYourSchool Team
+
+servers:
+  - url: https://api.rateyourschool.com/v1
+    description: Production server
+  - url: http://localhost:5001/v1
+    description: Development server
+
+paths:
+  # TODO: Add API endpoints here
+  # Each use case should add its endpoints to this file
+
+components:
+  schemas:
+    # TODO: Add shared data models here
+    
+  responses:
+    # Common error responses
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+EOF
+          fi
+          
+          # Create Arazzo file if it doesn't exist
+          ARAZZO_FILE="src/backend/Api/openapi/arazzo.yaml"
+          
+          if [ ! -f "$ARAZZO_FILE" ]; then
+            cat > "$ARAZZO_FILE" << 'EOF'
+arazzo: 1.0.0
+info:
+  title: RateYourSchool API Workflows
+  description: End-to-end workflows for the RateYourSchool API
+  version: 1.0.0
+
+sourceDescriptions:
+  - name: rateyourschool-api
+    url: ./openapi.yaml
+    type: openapi
+
+workflows:
+  # TODO: Add workflows here
+  # Each use case should add its workflow to this file
+EOF
+          fi
+          
+          git add "$OPENAPI_FILE" "$ARAZZO_FILE" || true
+
+      - name: Commit changes
+        if: steps.create-branch.outputs.branch-exists == 'false'
+        run: |
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "chore(api-spec): initialize API specification task for ${USE_CASE_NAME}
+
+          This commit initializes the API specification task for the '${USE_CASE_NAME}' use case.
+          
+          Files created:
+          - Task instructions for GitHub Copilot
+          - Placeholder OpenAPI specification
+          - Placeholder Arazzo workflow
+          
+          Next steps:
+          - Review the use case folder: docs/use-cases/${{ matrix.use-case.name }}/
+          - Complete the OpenAPI and Arazzo specifications
+          - Update the use case status to 'DONE'
+          
+          Generated by: API Specification Automation workflow"
+            
+            git push origin "icds/${USE_CASE_NAME}"
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          USE_CASE_TITLE="${{ matrix.use-case.title }}"
+          USE_CASE_FILE="${{ matrix.use-case.file }}"
+          BRANCH_NAME="icds/${USE_CASE_NAME}"
+          
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' || echo "")
+          
+          if [ -z "$EXISTING_PR" ]; then
+            echo "Creating new pull request..."
+            
+            # Create PR with detailed description
+            gh pr create \
+              --title "feat(api-spec): Add API specifications for ${USE_CASE_NAME}" \
+              --body "## 🤖 Automated API Specification Task
+
+          This PR was automatically created to implement the OpenAPI and Arazzo specifications for:
+
+          **Use Case:** ${USE_CASE_TITLE}  
+          **Use Case File:** \`${USE_CASE_FILE}\`  
+          **Branch:** \`${BRANCH_NAME}\`
+
+          ---
+
+          ## 📋 Task Overview
+
+          The following API specifications need to be added to the shared files:
+
+          1. **OpenAPI 3.x Specification**
+             - File: \`src/backend/Api/openapi/openapi.yaml\` (shared)
+             - Add your endpoints to the \`paths\` section
+             - Add your schemas to the \`components/schemas\` section
+
+          2. **Arazzo Workflow Specification**
+             - File: \`src/backend/Api/openapi/arazzo.yaml\` (shared)
+             - Add your workflow to the \`workflows\` section                    
+          3. **Postman Collection**
+             - File: `src/backend/Api/openapi/postman-collection.json` (shared)
+             - Add request examples for your endpoints
+             - Include test scripts and documentation          3. **Postman Collection**
+             - File: `src/backend/Api/openapi/postman-collection.json` (shared)
+             - Add request examples for your endpoints
+             - Include test scripts and documentation
+          ---
+
+          ## 🛠️ Instructions for GitHub Copilot
+
+          **@github-copilot** Please help implement this API specification by:
+
+          1. Reading the use case folder: \`docs/use-cases/${USE_CASE_NAME}/\`
+          2. Following the detailed instructions in: \`docs/use-cases/${USE_CASE_NAME}/api-spec-task.md\`
+          3. Creating complete OpenAPI and Arazzo specifications
+          4. Updating the use case file to mark \"API Specifications\" as \`DONE\`
+
+          The task file contains comprehensive instructions including:
+          - What needs to be included in each specification
+          - File locations and naming conventions
+          - Business rules to reference
+          - Examples and validation requirements
+
+          ---
+
+          ## ✅ Acceptance Criteria
+
+          - [ ] Endpoints added to \`openapi.yaml\`
+          - [ ] Schemas added to \`components/schemas\` section
+          - [ ] Workflow added to \`arazzo.yaml\`
+          - [ ] Postman requests added to `postman-collection.json`
+          - [ ] All endpoints from use case are included
+          - [ ] Request/response schemas match requirements
+          - [ ] Validation rules are implemented
+          - [ ] Examples are provided
+          - [ ] Business rules are referenced
+          - [ ] OpenAPI and Arazzo files are valid YAML
+          - [ ] Postman collection is valid JSON
+          - [ ] Use case status updated to \`DONE\` for API Specifications
+
+          ---
+
+          ## 📚 References
+
+          - Use Case Folder: [`docs/use-cases/${USE_CASE_NAME}/`](../docs/use-cases/${USE_CASE_NAME}/)
+          - Task Instructions: [`docs/use-cases/${USE_CASE_NAME}/api-spec-task.md`](../docs/use-cases/${USE_CASE_NAME}/api-spec-task.md)
+          - OpenAPI Spec: [`src/backend/Api/openapi/openapi.yaml`](../src/backend/Api/openapi/openapi.yaml)
+          - Arazzo Spec: [`src/backend/Api/openapi/arazzo.yaml`](../src/backend/Api/openapi/arazzo.yaml)
+          - Postman Collection: [`src/backend/Api/openapi/postman-collection.json`](../src/backend/Api/openapi/postman-collection.json)
+          - Architecture: [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)
+          - Business Rules: [`docs/BUSINESS_RULES.md`](../docs/BUSINESS_RULES.md)
+
+          ---
+
+          **Generated by:** API Specification Automation Workflow  
+          **Triggered:** $(date '+%Y-%m-%d %H:%M:%S UTC')  
+          **Commit:** ${{ github.sha }}
+
+          ---
+
+          💡 **Tip:** You can start working on this by asking Copilot in the PR or in your IDE:
+          \`\`\`
+          @workspace Please help me implement the API specifications for this use case following the instructions in the task file.
+          \`\`\`" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --label "api-specification" \
+              --label "automated" \
+              --label "copilot-task"
+          else
+            echo "Pull request already exists: #$EXISTING_PR"
+            echo "Updating PR with latest commit..."
+          fi
+
+      - name: Create GitHub Issue (Optional Notification)
+        if: steps.create-branch.outputs.branch-exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          USE_CASE_NAME="${{ matrix.use-case.name }}"
+          USE_CASE_TITLE="${{ matrix.use-case.title }}"
+          
+          gh issue create \
+            --title "API Specification needed: ${USE_CASE_TITLE}" \
+            --body "An API specification task has been identified and a PR has been created.
+
+          **Use Case:** ${USE_CASE_TITLE}
+          **Branch:** \`icds/${USE_CASE_NAME}\`
+          **PR:** See pull requests for \`icds/${USE_CASE_NAME}\`
+
+          The PR includes detailed instructions for implementing the OpenAPI and Arazzo specifications.
+
+          This issue will track the completion of the task." \
+            --label "api-specification" \
+            --label "automated" || echo "Issue creation failed or already exists"

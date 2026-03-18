@@ -1,0 +1,78 @@
+arazzo: 1.0.0
+info:
+  title: RateYourSchool API Workflows
+  description: |
+    End-to-end workflows for the RateYourSchool API demonstrating common use cases
+    and API integration patterns.
+    
+    These workflows show how to:
+    - Browse and search schools
+    - View school details and ratings
+    - Submit anonymous reviews
+    - Navigate the API effectively
+    
+  version: 1.0.0
+  contact:
+    name: RateYourSchool Team
+    url: https://github.com/OWNER/RateYourSchool
+
+sourceDescriptions:
+  - name: rateyourschool-api
+    url: ./openapi.yaml
+    type: openapi
+    description: RateYourSchool OpenAPI specification
+
+workflows:
+  # TODO: Add workflows here
+  # Each use case implementation should add its workflow to this section
+  #
+  # Example structure:
+  #
+  # - workflowId: browse-and-review-school
+  #   summary: Browse schools and submit a review
+  #   description: Demonstrates the complete flow of finding a school and submitting a review
+  #   inputs:
+  #     type: object
+  #     properties:
+  #       city:
+  #         type: string
+  #   steps:
+  #     - stepId: get-schools
+  #       operationId: getSchools
+  #       parameters:
+  #         - name: city
+  #           in: query
+  #           value: $inputs.city
+  #       successCriteria:
+  #         - condition: $statusCode == 200
+  #       outputs:
+  #         schoolId: $response.body.schools[0].id
+  #    
+  #     - stepId: get-school-details
+  #       operationId: getSchoolById
+  #       parameters:
+  #         - name: schoolId
+  #           in: path
+  #           value: $steps.get-schools.outputs.schoolId
+  #       successCriteria:
+  #         - condition: $statusCode == 200
+  #     
+  #     - stepId: submit-review
+  #       operationId: createReview
+  #       parameters:
+  #         - name: schoolId
+  #           in: path
+  #           value: $steps.get-schools.outputs.schoolId
+  #       requestBody:
+  #         contentType: application/json
+  #         payload:
+  #           username: "Anonymous User"
+  #           comment: "Great school!"
+  #           innovation: 4.5
+  #           building: 4.0
+  #           professorate: 4.5
+  #           managementTeam: 4.0
+  #       successCriteria:
+  #         - condition: $statusCode == 201
+  #   outputs:
+  #     reviewId: $steps.submit-review.outputs.reviewId

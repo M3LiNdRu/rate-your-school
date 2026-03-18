@@ -99,6 +99,55 @@ This project follows a professional code of conduct. Please be respectful and co
    - Reference any related issues
    - Ensure all CI checks pass
 
+## Automated Workflows
+
+This project includes several automated workflows to streamline development:
+
+### API Specification Automation
+
+When you create or update a use case document with a TODO API specification, the workflow automatically:
+
+1. **Detects** the TODO status in use case folders (`docs/use-cases/*/`)
+2. **Creates** a branch named `icds/<use-case-name>`
+3. **Generates** task instructions in the use case folder
+4. **Ensures** shared `openapi.yaml`, `arazzo.yaml`, and `postman-collection.json` files exist
+5. **Opens** a PR with detailed implementation guidance for GitHub Copilot
+
+**Check TODO API specs:**
+```bash
+./scripts/api-spec-helper.sh list
+```
+
+**Example use case entry:**
+```markdown
+| **API Specifications (OpenAPI + Arazzo)** | TODO | - |
+```
+
+Use case files should be organized in folders: `docs/use-cases/< use-case-name>/use-case.md`
+
+**Important:** All use cases contribute to the same shared API specification files:
+- `src/backend/Api/openapi/openapi.yaml` - All API endpoints
+- `src/backend/Api/openapi/arazzo.yaml` - All workflows
+- `src/backend/Api/openapi/postman-collection.json` - All request examples and tests
+
+See [.github/API_SPEC_AUTOMATION.md](.github/API_SPEC_AUTOMATION.md) and [.github/API_SPEC_QUICK_REFERENCE.md](.github/API_SPEC_QUICK_REFERENCE.md) for details.
+
+### Semantic Release
+
+Releases are fully automated based on conventional commits:
+- Push to `main` triggers version calculation
+- CHANGELOG.md is automatically updated
+- Git tags and GitHub releases are created
+
+See [.github/SEMANTIC_RELEASE_SETUP.md](.github/SEMANTIC_RELEASE_SETUP.md) for details.
+
+### Commit Message Validation
+
+All commits are validated using commitlint:
+- Ensures conventional commit format
+- Runs on pull requests and pushes to main
+- Prevents invalid commit messages from being merged
+
 ## Commit Message Guidelines
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/) for semantic versioning and automated releases.

@@ -98,6 +98,36 @@ dotnet test tests/RateYourSchool.Tests.Integration/
 - **[Business Rules](docs/BUSINESS_RULES.md)** - Application business logic reference
 - **[Use Cases](docs/use-cases/)** - Feature specifications and workflows
 - **[API Documentation](src/backend/Api/openapi/)** - OpenAPI specifications
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
+- **[Commit Conventions](.github/COMMIT_CONVENTION.md)** - Commit message standards
+- **[Semantic Release Setup](.github/SEMANTIC_RELEASE_SETUP.md)** - Automated versioning and releases
+- **[API Spec Automation](.github/API_SPEC_AUTOMATION.md)** - Automated API specification workflow
+
+## Development Workflow Automation
+
+This project includes automated workflows to streamline development:
+
+### Semantic Release
+- **Automatic versioning** based on conventional commits
+- **CHANGELOG.md generation** with every release
+- **Git tags and GitHub releases** created automatically
+- See [.github/SEMANTIC_RELEASE_SETUP.md](.github/SEMANTIC_RELEASE_SETUP.md) for details
+
+### API Specification Automation
+- **Auto-detects TODO API specifications** in use case folders
+- **Creates branches and PRs** automatically (named `icds/<use-case-name>`)
+- **Generates task instructions** for GitHub Copilot
+- **Maintains shared OpenAPI, Arazzo, and Postman files** for all use cases
+- **Streamlines API development** with unified specifications
+
+**Check TODO API specs:** Run \`./scripts/api-spec-helper.sh list\` to see pending tasks
+
+Use cases should be organized in folders: \`docs/use-cases/<use-case-name>/use-case.md\`
+
+**All use cases contribute to:**
+- \`src/backend/Api/openapi/openapi.yaml\` - Shared API specification
+- \`src/backend/Api/openapi/arazzo.yaml\` - Shared workflow specification- `src/backend/Api/openapi/postman-collection.json` - Shared test collection
+See [.github/API_SPEC_AUTOMATION.md](.github/API_SPEC_AUTOMATION.md) for complete workflow documentation.
 
 ## Business Rules
 
@@ -118,7 +148,33 @@ This project follows strict coding standards:
 - **Testing**: Minimum 80% code coverage for business logic
 - **Architecture**: Vertical slices with minimal cross-feature dependencies
 
-Refer to [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed coding guidelines.
+### Commit Messages
+
+All commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <subject>
+```
+
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+Examples:
+- `feat(api): add pagination support for reviews`
+- `fix(scoring): correct average calculation`
+- `docs(readme): update installation instructions`
+
+See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for complete guidelines.
+
+### Versioning & Releases
+
+This project uses [Semantic Versioning](https://semver.org/) with automated releases:
+- **Major** (X.0.0): Breaking changes (commits with `BREAKING CHANGE:` or `!`)
+- **Minor** (0.X.0): New features (`feat` commits)
+- **Patch** (0.0.X): Bug fixes and improvements (`fix`, `perf`, `refactor`, `docs`, `build`)
+
+Releases are automatically generated when code is pushed to `main` branch.
+
+Refer to [CONTRIBUTING.md](CONTRIBUTING.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed guidelines.
 
 ## License
 

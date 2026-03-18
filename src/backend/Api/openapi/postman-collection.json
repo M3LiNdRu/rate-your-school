@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "RateYourSchool API",
+    "description": "Postman collection for the RateYourSchool API. Automatically synchronized with OpenAPI specification.\n\n## Getting Started\n\n1. Import this collection into Postman\n2. Set the `baseUrl` variable to your API endpoint\n3. Run requests and view automated tests\n\n## Variables\n\n- `baseUrl`: Development server (default: http://localhost:5001/v1)\n- `prodUrl`: Production server (https://api.rateyourschool.com/v1)\n\n## Architecture\n\n- CQRS pattern with read/write model separation\n- MongoDB for data persistence\n- Eventual consistency between write and read models",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "rateyourschool-api-collection",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001/v1",
+      "type": "string",
+      "description": "Base URL for the API (development server)"
+    },
+    {
+      "key": "prodUrl",
+      "value": "https://api.rateyourschool.com/v1",
+      "type": "string",
+      "description": "Base URL for the API (production server)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Schools",
+      "description": "School information and ratings endpoints",
+      "item": []
+    },
+    {
+      "name": "Reviews",
+      "description": "User review endpoints",
+      "item": []
+    },
+    {
+      "name": "Health",
+      "description": "Health check and status endpoints",
+      "item": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "// Add any setup logic here (e.g., generate timestamps, IDs)"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "// These tests run for all requests unless overridden",
+          "",
+          "pm.test(\"Status code should be successful\", function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "pm.test(\"Response time is acceptable\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+          "});",
+          "",
+          "pm.test(\"Content-Type is application/json\", function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});"
+        ]
+      }
+    }
+  ]
+}
