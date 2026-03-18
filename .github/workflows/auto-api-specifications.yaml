@@ -77,6 +77,9 @@ jobs:
           
           # Set outputs
           if [ "$TODO_FOUND" = true ]; then
+            # Compact JSON to single line without extra whitespace
+            TODO_LIST=$(echo "$TODO_LIST" | jq -c '.')
+            
             echo "has-todos=true" >> $GITHUB_OUTPUT
             echo "todo-list=$TODO_LIST" >> $GITHUB_OUTPUT
             echo "Found TODO items: $TODO_LIST"
