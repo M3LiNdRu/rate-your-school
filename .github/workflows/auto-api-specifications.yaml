@@ -292,6 +292,7 @@ jobs:
           fi
 
       - name: Create Pull Request
+        if: steps.create-branch.outputs.branch-exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
@@ -299,6 +300,14 @@ jobs:
           USE_CASE_TITLE="${{ matrix.use-case.title }}"
           USE_CASE_FILE="${{ matrix.use-case.file }}"
           BRANCH_NAME="icds/${USE_CASE_NAME}"
+          
+          # Check if there are commits on this branch compared to main
+          COMMIT_COUNT=$(git rev-list --count main.."$BRANCH_NAME" 2>/dev/null || echo "0")
+          
+          if [ "$COMMIT_COUNT" -eq "0" ]; then
+            echo "No commits on branch $BRANCH_NAME, skipping PR creation"
+            exit 0
+          fi
           
           # Check if PR already exists
           EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' || echo "")
