@@ -265,7 +265,6 @@ jobs:
           git add "$TASK_FILE"
 
       - name: Commit changes
-        if: steps.create-branch.outputs.branch-exists == 'false'
         run: |
           USE_CASE_NAME="${{ matrix.use-case.name }}"
           
