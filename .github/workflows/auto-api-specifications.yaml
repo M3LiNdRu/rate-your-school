@@ -369,6 +369,12 @@ jobs:
             **Tip:** Ask Copilot to implement the API specifications following the instructions in the task file.
           EOF
             
+            # Create labels if they don't exist
+            gh label create "api-specification" --description "API specification tasks" --color "0E8A16" --force 2>/dev/null || true
+            gh label create "automated" --description "Automated workflow tasks" --color "FBCA04" --force 2>/dev/null || true
+            gh label create "copilot-task" --description "Tasks for GitHub Copilot" --color "D4C5F9" --force 2>/dev/null || true
+            
+            # Create PR
             gh pr create \
               --title "$PR_TITLE" \
               --body-file /tmp/workflow-templates/pr-body.md \
@@ -376,7 +382,12 @@ jobs:
               --head "$BRANCH_NAME" \
               --label "api-specification" \
               --label "automated" \
-              --label "copilot-task" || echo "Warning: Could not create PR or add labels"
+              --label "copilot-task" 2>/dev/null || \
+            gh pr create \
+              --title "$PR_TITLE" \
+              --body-file /tmp/workflow-templates/pr-body.md \
+              --base main \
+              --head "$BRANCH_NAME"
             
             rm -rf /tmp/workflow-templates
           else
@@ -403,10 +414,14 @@ jobs:
           This issue will track the completion of the task.
           EOF
           
+          # Create issue (labels should already exist from PR creation)
           gh issue create \
             --title "API Specification needed: ${USE_CASE_TITLE}" \
             --body-file /tmp/workflow-templates/issue-body.md \
             --label "api-specification" \
-            --label "automated" || echo "Warning: Could not create issue or add labels"
+            --label "automated" 2>/dev/null || \
+          gh issue create \
+            --title "API Specification needed: ${USE_CASE_TITLE}" \
+            --body-file /tmp/workflow-templates/issue-body.md
           
           rm -rf /tmp/workflow-templates
