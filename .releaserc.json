@@ -3,7 +3,6 @@
     "main",
     "master"
   ],
-  "repositoryUrl": "https://github.com/OWNER/RateYourSchool",
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
