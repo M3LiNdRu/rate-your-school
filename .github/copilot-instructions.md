@@ -14,6 +14,11 @@ RateYourSchool is a web application for rating and reviewing schools, built with
 - **Observability**: OpenTelemetry
 - **Infrastructure**: Terraform
 
+**Important Git Convention:**
+- **Trunk Branch**: `master` (NOT `main`)
+- Always use `master` as the base branch for PRs and branch comparisons
+- GitHub Actions workflows and git commands should reference `master`
+
 **Key Documentation:**
 - Business Rules: `docs/BUSINESS_RULES.md`
 - Architecture: `docs/ARCHITECTURE.md`
