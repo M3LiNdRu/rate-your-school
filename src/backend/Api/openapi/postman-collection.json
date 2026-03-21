@@ -24,7 +24,258 @@
     {
       "name": "Schools",
       "description": "School information and ratings endpoints",
-      "item": []
+      "item": [
+        {
+          "name": "Get School Rates (Default Pagination)",
+          "description": "Retrieves the first page of school rates with default pagination (page=1, pageSize=20). Business Rules: BR-024, BR-025, BR-028.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has schools array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property(\"schools\");",
+                  "    pm.expect(jsonData.schools).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Each school has required properties\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.schools.forEach(function(school) {",
+                  "        pm.expect(school).to.have.property(\"info\");",
+                  "        pm.expect(school).to.have.property(\"score\");",
+                  "        pm.expect(school).to.have.property(\"reviews\");",
+                  "        pm.expect(school.info).to.have.property(\"name\");",
+                  "        pm.expect(school.info).to.have.property(\"address\");",
+                  "        pm.expect(school.info).to.have.property(\"imageUrl\");",
+                  "        pm.expect(school.score).to.have.property(\"innovation\");",
+                  "        pm.expect(school.score).to.have.property(\"building\");",
+                  "        pm.expect(school.score).to.have.property(\"professorate\");",
+                  "        pm.expect(school.score).to.have.property(\"managementTeam\");",
+                  "        pm.expect(school.score).to.have.property(\"total\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is acceptable (BR-029)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Successful response with schools",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/schools",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "schools"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"schools\": [\n    {\n      \"info\": {\n        \"name\": \"Maple Leaf Elementary\",\n        \"address\": \"123 Main St, Toronto, ON\",\n        \"imageUrl\": \"https://example.com/maple-leaf.jpg\"\n      },\n      \"score\": {\n        \"innovation\": 4.5,\n        \"building\": 4.2,\n        \"professorate\": 4.6,\n        \"managementTeam\": 4.3,\n        \"total\": 4.4\n      },\n      \"reviews\": [\n        {\n          \"userName\": \"JohnDoe\",\n          \"comment\": \"Excellent school with great teachers!\",\n          \"rating\": 5.0\n        },\n        {\n          \"userName\": \"JaneSmith\",\n          \"comment\": \"Good facilities and programs\",\n          \"rating\": 4.0\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get School Rates (Custom Pagination)",
+          "description": "Retrieves a specific page of school rates with custom page size. Business Rules: BR-024, BR-027.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools?page=1&pageSize=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (1-based, BR-026)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "5",
+                  "description": "Number of results per page [1-1000] (BR-027)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains at most 5 schools\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.schools).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.schools.length).to.be.at.most(5);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get School Rates (Invalid Page Corrected)",
+          "description": "Demonstrates that invalid page numbers below 1 are automatically corrected to 1. Business Rules: BR-026.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools?page=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Invalid page number - will be corrected to 1 (BR-026)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 (invalid page corrected to 1)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has schools array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property(\"schools\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get School Rates (Page 2)",
+          "description": "Retrieves the second page of school rates to demonstrate pagination navigation. Business Rules: BR-024, BR-025.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools?page=2&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Second page (BR-024)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "Default page size (BR-025)"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Schools array is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.schools).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Reviews",

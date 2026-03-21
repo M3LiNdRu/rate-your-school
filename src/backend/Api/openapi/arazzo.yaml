@@ -23,56 +23,67 @@ sourceDescriptions:
     description: RateYourSchool OpenAPI specification
 
 workflows:
-  # TODO: Add workflows here
-  # Each use case implementation should add its workflow to this section
-  #
-  # Example structure:
-  #
-  # - workflowId: browse-and-review-school
-  #   summary: Browse schools and submit a review
-  #   description: Demonstrates the complete flow of finding a school and submitting a review
-  #   inputs:
-  #     type: object
-  #     properties:
-  #       city:
-  #         type: string
-  #   steps:
-  #     - stepId: get-schools
-  #       operationId: getSchools
-  #       parameters:
-  #         - name: city
-  #           in: query
-  #           value: $inputs.city
-  #       successCriteria:
-  #         - condition: $statusCode == 200
-  #       outputs:
-  #         schoolId: $response.body.schools[0].id
-  #    
-  #     - stepId: get-school-details
-  #       operationId: getSchoolById
-  #       parameters:
-  #         - name: schoolId
-  #           in: path
-  #           value: $steps.get-schools.outputs.schoolId
-  #       successCriteria:
-  #         - condition: $statusCode == 200
-  #     
-  #     - stepId: submit-review
-  #       operationId: createReview
-  #       parameters:
-  #         - name: schoolId
-  #           in: path
-  #           value: $steps.get-schools.outputs.schoolId
-  #       requestBody:
-  #         contentType: application/json
-  #         payload:
-  #           username: "Anonymous User"
-  #           comment: "Great school!"
-  #           innovation: 4.5
-  #           building: 4.0
-  #           professorate: 4.5
-  #           managementTeam: 4.0
-  #       successCriteria:
-  #         - condition: $statusCode == 201
-  #   outputs:
-  #     reviewId: $steps.submit-review.outputs.reviewId
+  - workflowId: browse-schoolrates
+    summary: Browse school rates with pagination
+    description: |
+      End-to-end workflow demonstrating how to browse and paginate through
+      the list of school rates. This workflow covers the initial page load
+      and subsequent page navigation.
+
+      **Use Case:** UC-003 (View School Details)
+      **Business Rules:** BR-024 through BR-028
+    inputs:
+      type: object
+      properties:
+        initialPage:
+          type: integer
+          default: 1
+          description: Starting page number (BR-025)
+        initialPageSize:
+          type: integer
+          default: 20
+          description: Number of schools per page (BR-025)
+    steps:
+      - stepId: list-schoolrates-first-page
+        summary: Retrieve initial list of school rates
+        description: |
+          Fetches the first page of school rates. Page numbers below 1 are
+          automatically corrected to 1 (BR-026). Page size is clamped to
+          [1, 1000] (BR-027).
+        operationId: rateyourschool-api.getSchoolRates
+        parameters:
+          - name: page
+            in: query
+            value: $inputs.initialPage
+          - name: pageSize
+            in: query
+            value: $inputs.initialPageSize
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body.schools != null
+        outputs:
+          schoolsList: $response.body.schools
+          schoolCount: $response.body.schools.length
+
+      - stepId: list-schoolrates-next-page
+        summary: Load the next page of school rates
+        description: |
+          Fetches the next page of school rates for pagination navigation.
+          Demonstrates how pagination parameters work together (BR-024).
+        operationId: rateyourschool-api.getSchoolRates
+        parameters:
+          - name: page
+            in: query
+            value: $inputs.initialPage + 1
+          - name: pageSize
+            in: query
+            value: $inputs.initialPageSize
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          nextPageSchools: $response.body.schools
+
+    outputs:
+      initialSchools: $steps.list-schoolrates-first-page.outputs.schoolsList
+      schoolCount: $steps.list-schoolrates-first-page.outputs.schoolCount
+      nextPageSchools: $steps.list-schoolrates-next-page.outputs.nextPageSchools

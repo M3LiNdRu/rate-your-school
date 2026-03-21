@@ -71,18 +71,18 @@ Add your request examples to the Postman collection:
 
 ## Checklist
 
-- [ ] Endpoints added to `openapi.yaml`
-- [ ] Schemas added to `components/schemas` section
-- [ ] Workflow added to `arazzo.yaml`
-- [ ] Postman requests added to `postman-collection.json`
-- [ ] All endpoints from use case are included
-- [ ] Request/response schemas match requirements
-- [ ] Validation rules are implemented
-- [ ] Examples are provided
-- [ ] Business rules are referenced
-- [ ] OpenAPI and Arazzo files are valid YAML
-- [ ] Postman collection is valid JSON
-- [ ] Use case status updated to `DONE` for API Specifications
+- [x] Endpoints added to `openapi.yaml`
+- [x] Schemas added to `components/schemas` section
+- [x] Workflow added to `arazzo.yaml`
+- [x] Postman requests added to `postman-collection.json`
+- [x] All endpoints from use case are included
+- [x] Request/response schemas match requirements
+- [x] Validation rules are implemented
+- [x] Examples are provided
+- [x] Business rules are referenced
+- [x] OpenAPI and Arazzo files are valid YAML
+- [x] Postman collection is valid JSON
+- [x] Use case status updated to `DONE` for API Specifications
 
 ## Next Steps After Completion
 
