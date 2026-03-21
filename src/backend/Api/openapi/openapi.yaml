@@ -37,38 +37,208 @@ tags:
     description: API health and status
 
 paths:
-  # TODO: Add API endpoints here
-  # Each use case implementation should add its endpoints to this section
-  #
-  # Example structure:
-  # /schools:
-  #   get:
-  #     summary: Get list of schools
-  #     ...
-  #
-  # /schools/{schoolId}:
-  #   get:
-  #     summary: Get school details
-  #     ...
-  #
-  # /schools/{schoolId}/reviews:
-  #   post:
-  #     summary: Create a review
-  #     ...
+  /api/v1/schools:
+    get:
+      summary: Get list of school rates
+      description: |
+        Retrieves a paginated list of school rates with comprehensive information
+        including school details, aggregated scores, and the last 25 user reviews
+        per school.
+
+        **CQRS Note:** This endpoint reads from the SchoolRate read model
+        (MongoDB `schoolRates` collection), not the School write model.
+
+        **Business Rules:**
+        - BR-024: Pagination support via `page` and `pageSize` query parameters
+        - BR-025: Default to page=1 and pageSize=20 when not specified
+        - BR-026: Page numbers < 1 are automatically corrected to 1
+        - BR-027: pageSize is clamped to the range [1, 1000]
+        - BR-028: Each school includes Info, Score, and up to 25 Reviews
+        - BR-012: Maximum of 25 most-recent reviews are included per school
+      operationId: getSchoolRates
+      tags:
+        - Schools
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successfully retrieved school rates list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSchoolRatesResponse'
+              examples:
+                withSchools:
+                  summary: Response containing school rates
+                  value:
+                    schools:
+                      - info:
+                          name: "Maple Leaf Elementary"
+                          address: "123 Main St, Toronto, ON"
+                          imageUrl: "https://example.com/maple-leaf.jpg"
+                        score:
+                          innovation: 4.5
+                          building: 4.2
+                          professorate: 4.6
+                          managementTeam: 4.3
+                          total: 4.4
+                        reviews:
+                          - userName: "JohnDoe"
+                            comment: "Excellent school with great teachers!"
+                            rating: 5.0
+                          - userName: "JaneSmith"
+                            comment: "Good facilities and programs"
+                            rating: 4.0
+                      - info:
+                          name: "Oak Grove High"
+                          address: "456 Oak Ave, Toronto, ON"
+                          imageUrl: "https://example.com/oak-grove.jpg"
+                        score:
+                          innovation: 3.8
+                          building: 3.9
+                          professorate: 3.7
+                          managementTeam: 3.8
+                          total: 3.8
+                        reviews: []
+                empty:
+                  summary: Empty response when no schools exist
+                  value:
+                    schools: []
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   schemas:
-    # TODO: Add shared data models here
-    # Each use case implementation should add its schemas to this section
-    #
-    # Common schemas to define:
-    # - School
-    # - SchoolRate
-    # - UserReview
-    # - Score
-    # - Location
-    # - Error responses
-    
+    GetSchoolRatesResponse:
+      type: object
+      description: Paginated list of school rates
+      required:
+        - schools
+      properties:
+        schools:
+          type: array
+          description: List of school rate view models (BR-028)
+          items:
+            $ref: '#/components/schemas/SchoolViewModel'
+
+    SchoolViewModel:
+      type: object
+      description: |
+        Denormalized school rate view model combining school information,
+        aggregated scores, and recent reviews (BR-009, BR-028).
+      required:
+        - info
+        - score
+        - reviews
+      properties:
+        info:
+          $ref: '#/components/schemas/SchoolInfo'
+        score:
+          $ref: '#/components/schemas/Score'
+        reviews:
+          type: array
+          description: Last 25 user reviews ordered by date descending (BR-012)
+          maxItems: 25
+          items:
+            $ref: '#/components/schemas/UserReview'
+
+    SchoolInfo:
+      type: object
+      description: Basic school information (BR-028)
+      required:
+        - name
+        - address
+        - imageUrl
+      properties:
+        name:
+          type: string
+          description: School name
+          example: "Maple Leaf Elementary"
+        address:
+          type: string
+          description: Full physical address
+          example: "123 Main St, Toronto, ON"
+        imageUrl:
+          type: string
+          format: uri
+          description: URL to the school's image
+          example: "https://example.com/maple-leaf.jpg"
+
+    Score:
+      type: object
+      description: |
+        Multi-dimensional aggregated score for a school (BR-016, BR-017, BR-018).
+        Total is the arithmetic mean of the four dimensions.
+      required:
+        - innovation
+        - building
+        - professorate
+        - managementTeam
+        - total
+      properties:
+        innovation:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: Assessment of innovative practices (BR-016)
+          example: 4.5
+        building:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: Evaluation of facilities and infrastructure (BR-016)
+          example: 4.2
+        professorate:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: Rating of teaching staff quality (BR-016)
+          example: 4.6
+        managementTeam:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: Evaluation of administrative leadership (BR-016)
+          example: 4.3
+        total:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: |
+            Arithmetic mean of all four dimensions:
+            (Innovation + Building + Professorate + ManagementTeam) / 4 (BR-017)
+          example: 4.4
+
+    UserReview:
+      type: object
+      description: Anonymous user review for a school (BR-036, BR-038)
+      required:
+        - userName
+        - comment
+        - rating
+      properties:
+        userName:
+          type: string
+          description: Reviewer's username (anonymous, no account required - BR-038)
+          example: "JohnDoe"
+        comment:
+          type: string
+          description: Text feedback from the reviewer
+          example: "Great school with excellent facilities"
+        rating:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 5
+          description: Numerical rating given by the reviewer
+          example: 4.5
+
     Error:
       type: object
       description: Standard error response

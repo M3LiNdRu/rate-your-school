@@ -12,7 +12,7 @@
 | Task | Status | Completed |
 |------|--------|-----------|
 | **Functional Requirements Document** | DONE | 2026-03-16 |
-| **API Specifications (OpenAPI + Arazzo)** | TODO | - |
+| **API Specifications (OpenAPI + Arazzo)** | DONE | 2026-03-21 |
 | **Backend Implementation (Vertical Slice)** | TODO | - |
 | **Frontend Implementation** | TODO | - |
 | **E2E Tests** | TODO | - |
